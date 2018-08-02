@@ -1,6 +1,7 @@
 package com.thrift.demo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,17 +16,13 @@ public class HelloClientController {
 
     @RequestMapping(value = "/hi", method = RequestMethod.GET)
     public String hi(@RequestParam("name") String name) {
-        String s = "nobody";
-
         try {
-            helloClient.open();
-            s = helloClient.getHelloService().helloString(name);
+            MethodCallback callBack = new MethodCallback();
+            helloClient.getHelloService().helloString(name, callBack);
         } catch (Exception e) {
-
-        } finally {
-            helloClient.close();
+            System.out.println(e);
         }
 
-        return s;
+        return "success";
     }
 }

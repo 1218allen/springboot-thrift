@@ -1,41 +1,38 @@
 package com.thrift.demo;
 
 import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.server.TNonblockingServer;
 import org.apache.thrift.server.TServer;
-import org.apache.thrift.server.TSimpleServer;
-import org.apache.thrift.server.TThreadPoolServer;
-import org.apache.thrift.transport.TServerSocket;
-import org.apache.thrift.transport.TServerTransport;
-import org.apache.thrift.transport.TTransportFactory;
+import org.apache.thrift.transport.*;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ThriftServer {
-    private TBinaryProtocol.Factory protocolFactory;
-    private TTransportFactory transportFactory;
+    private TProtocolFactory protocolFactory;
+    private TFramedTransport.Factory transportFactory;
 
     public void init() {
         protocolFactory = new TBinaryProtocol.Factory();
-        transportFactory = new TTransportFactory();
+        transportFactory = new TFramedTransport.Factory();
     }
 
     public void start() {
         Hello.Processor processor = new Hello.Processor<Hello.Iface>(new HelloServiceImpl());
         init();
+
         try {
-            TServerTransport transport = new TServerSocket(7911);
-            TThreadPoolServer.Args tArgs = new TThreadPoolServer.Args(transport);
+            TNonblockingServerSocket transport = new TNonblockingServerSocket(7911);
+            TNonblockingServer.Args tArgs = new TNonblockingServer.Args(transport);
             tArgs.processor(processor);
             tArgs.protocolFactory(protocolFactory);
             tArgs.transportFactory(transportFactory);
-            tArgs.minWorkerThreads(2);
-            tArgs.maxWorkerThreads(1);
-            TServer server = new TSimpleServer(tArgs);
-            System.out.println("thrift服务启动成功, 端口=7911");
+            TServer server = new TNonblockingServer(tArgs);
             server.serve();
+
+            System.out.println("thrift服务启动成功, 端口=7911");
         } catch (Exception e) {
             System.out.println("thrift服务启动失败");
         }
-
     }
 }
